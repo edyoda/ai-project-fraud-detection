@@ -6,6 +6,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from joblib import dump, load
 
 from imblearn.pipeline import make_pipeline
 from imblearn.over_sampling import SMOTE
@@ -54,7 +55,7 @@ class BuildMlPipeline:
     
     def fit(self, trainX, trainY):
         self.gs_pipelines = []
-        for pipeline in self.model_pipelines:
+        for idx,pipeline in enumerate(self.model_pipelines):
             elems = list(map(lambda x:x[0] ,pipeline.steps))
             param_grid = {}
             for elem in elems:
@@ -63,6 +64,7 @@ class BuildMlPipeline:
     
             gs = GridSearchCV(pipeline, param_grid= param_grid, n_jobs=-1, cv=5)
             gs.fit(trainX, trainY)
+            #dump(gs, 'model'+idx+'.pipeline') 
             self.gs_pipelines.append(gs)
       
         
@@ -80,8 +82,10 @@ if __name__ == '__main__':
     ml_pipeline = BuildMlPipeline()
     ml_pipeline.set_estimators('randomForestClassifier')
     ml_pipeline.set_scalers('standardscaler')
-    ml_pipeline.set_samplers('smoteenn')
+    ml_pipeline.set_samplers('smote','smoteenn')
     ml_pipeline.create_pipelines()
+   
+    print (ml_pipeline.model_pipelines)
     
     params_dict = {}
     params_dict['smote'] = {'smote__k_neighbors':[5,10,15]}
@@ -91,10 +95,10 @@ if __name__ == '__main__':
 
     ml_pipeline.set_hyperparameters(params_dict)
 
-    credit_data = pd.read_csv('creditcard.csv').sample(10000)
+    credit_data = pd.read_csv('creditcard.csv').sample(20000)
     X = credit_data.drop(['Time','C'],axis=1)
     y = credit_data.C
     trainX, testX, trainY, testY = train_test_split(X,y)
-    ml_pipeline.fit(trainX,trainY)
+    ml_pipeline.fit(X,y)
     ml_pipeline.score(testX,testY)
-
+    

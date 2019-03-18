@@ -1,6 +1,7 @@
 from cassandra_rw import CassandraReadWriteDb
 from TxInfo import TxInfoModel
 from ml_model import BuildMlPipeline
+from sklearn.model_selection import train_test_split
 
 if __name__ == '__main__':
 
@@ -13,11 +14,13 @@ if __name__ == '__main__':
     #Load cassandra data into pandas
     credit_data = cass_rw.get_pandas_from_cassandra()
 
+    print ('Data loaded into dataframe')
+
     #Create models
     ml_pipeline = BuildMlPipeline()
-    ml_pipeline.set_estimators('sgdclassifier','randomForestClassifier')
+    ml_pipeline.set_estimators('sgdClassifier','randomForestClassifier')
     ml_pipeline.set_scalers('standardscaler')
-    ml_pipeline.set_samplers('smoteenn')
+    ml_pipeline.set_samplers('smote','smoteenn')
     ml_pipeline.create_pipelines()
 
     #Hyperparameter Configuration
@@ -28,14 +31,18 @@ if __name__ == '__main__':
     params_dict['svc'] = {'svc__kernel':['linear','rbf','poly'],'svc__C':[.1,1,10]}
     ml_pipeline.set_hyperparameters(params_dict)
 
-    credit_data = credit_data.sample(10000)
+    #credit_data = credit_data.sample(10000)
     
-    X = credit_data.drop(['Time','C'],axis=1)
+    X = credit_data.drop(['tx_id','Time','C'],axis=1)
     y = credit_data.C
     trainX, testX, trainY, testY = train_test_split(X,y)
+
+    print ('Model Training')
 
     #model training
     ml_pipeline.fit(trainX,trainY)
 
     #Calculating model performance
     ml_pipeline.score(testX,testY)
+
+    

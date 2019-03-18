@@ -40,5 +40,3 @@ if __name__ == '__main__':
     cwd.sync_class_table(TxInfoModel)
     #cwd.write_file_table('credit.csv')
     print(cwd.get_pandas_from_cassandra())
-
-
