@@ -33,6 +33,11 @@ class CassandraReadWriteDb:
         tx_info.columns = q.keys()
         return tx_info
 
+    def write_json_table(self, data):
+        print (data)
+        self.typeOfClass.create(**dict(data))
+
+
 
 if __name__ == '__main__':
 
